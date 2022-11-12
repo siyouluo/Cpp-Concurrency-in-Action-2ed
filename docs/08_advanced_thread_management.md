@@ -741,3 +741,12 @@ int main() {
   // 即使它还可以做一些有用的工作，比如中断其他线程
 }
 ```
+
+
+
+# 其他 C++ 线程池实现的介绍
+
+1. [Jakob Progsch](https://github.com/progschj) 于 2012年在 Github 开源了一个简单的[C++11线程池实现](https://github.com/progschj/ThreadPool)代码，代码完全在一个只有不到 100 行的 [ThreadPool.h](https://github.com/progschj/ThreadPool/blob/master/ThreadPool.h) 中实现, 其代码值得精读，且仓库中的相关 issue 也值得仔细看一下.
+2. lzpong 参考 Jakob Progsch 的实现与 [相关博客](https://blog.csdn.net/zdarks/article/details/46994607), 进一步改进线程池实现，支持多余空闲线程的自动释放，开源在 [lzpong/threadpool](https://github.com/lzpong/threadpool) 仓库。该仓库有个配套博客在 [博客园](https://www.cnblogs.com/lzpong/p/6397997.html).
+3. MicroDeLe 在博客 [c++ 11 线程池---完全使用c++ 11新特性](https://www.cnblogs.com/microDeLe/p/16010882.html) 也给出了一个线程池实现，共2个头文件和3个源文件，主要是该博客中列举了需要用到的C++新特性，可以照着逐个学习。
+
