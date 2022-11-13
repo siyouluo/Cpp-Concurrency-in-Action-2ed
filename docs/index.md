@@ -1,21 +1,18 @@
-* C++11 引入了 Boost 线程库作为标准线程库，作者 Anthony Williams 为介绍其特性，于 2012 年出版了 *[C++ Concurrency in Action](https://book.douban.com/subject/4130141/)* 一书，并顺应 C++17 于 2019 年 2 月出版了[第二版](https://book.douban.com/subject/27036085/)。*[C++ Concurrency in Action 2ed](https://learning.oreilly.com/library/view/c-concurrency-in/9781617294693/)* 前五章介绍了[线程支持库](https://en.cppreference.com/w/cpp/thread)的基本用法，后六章从实践角度介绍了并发编程的设计思想，相比第一版多介绍了一些 C++17 特性，如 [std::scoped_lock](https://en.cppreference.com/w/cpp/thread/scoped_lock)、[std::shared_mutex](https://en.cppreference.com/w/cpp/thread/shared_mutex)，并多出一章（第十章）介绍 [C++17 标准库并行算法](https://en.cppreference.com/w/cpp/header/execution)，此外个人会在相应处补充 C++20 相关特性，如 [std::jthread](https://en.cppreference.com/w/cpp/thread/jthread)、[std::counting_semaphore](https://en.cppreference.com/w/cpp/thread/counting_semaphore)、[std::barrier](https://en.cppreference.com/w/cpp/thread/barrier)、[std::latch](https://en.cppreference.com/w/cpp/thread/latch) 等。阅读本书前可参考 [Andrew S. Tanenbaum](https://en.wikipedia.org/wiki/Andrew_S._Tanenbaum) 的 [*Modern Operating Systems*](https://book.douban.com/subject/25864553/)，预备操作系统的基础知识（[进程与线程](reference/processes_and_threads.html)、[死锁](reference/deadlocks.html)、[内存管理](reference/memory_management.html)、[文件系统](reference/file_systems.html)、[I/O](reference/IO.html) 等）。此为个人笔记，仅供参考，更详细内容见[原书](https://learning.oreilly.com/library/view/c-concurrency-in/9781617294693/)。
-
-
-## [线程支持库](https://en.cppreference.com/w/cpp/thread)
+## 并发支持库
 1. [C++并发概述](01_hello_world_of_concurrency_in_cpp.md)
 2. [线程管理（Managing thread）](02_managing_thread.md)：[\<thread\>](https://en.cppreference.com/w/cpp/header/thread)
-3. [线程间共享数据（Sharing data between thread）](02_sharing_data_between_thread.md)：[\<mutex\>](https://en.cppreference.com/w/cpp/header/mutex)、[\<shared_mutex\>](https://en.cppreference.com/w/cpp/header/shared_mutex)
-4. [同步并发操作（Synchronizing concurrent operation）](03_synchronizing_concurrent_operation.md)：[\<condition_variable\>](https://en.cppreference.com/w/cpp/header/condition_variable)、[\<semaphore\>](https://en.cppreference.com/w/cpp/header/semaphore)、[\<barrier\>](https://en.cppreference.com/w/cpp/header/barrier)、[\<latch\>](https://en.cppreference.com/w/cpp/header/latch)、[\<future\>](https://en.cppreference.com/w/cpp/header/future)、[\<chrono\>](https://en.cppreference.com/w/cpp/header/chrono)、[\<ratio\>](https://en.cppreference.com/w/cpp/header/ratio)
-5. [C++ 内存模型和基于原子类型的操作（The C++ memory model and operations on atomic type）](04_the_cpp_memory_model_and_operations_on_atomic_type.md)：[\<atomic\>](https://en.cppreference.com/w/cpp/header/atomic)
+3. [线程间共享数据（Sharing data between thread）](03_sharing_data_between_thread.md)：[\<mutex\>](https://en.cppreference.com/w/cpp/header/mutex)、[\<shared_mutex\>](https://en.cppreference.com/w/cpp/header/shared_mutex)
+4. [同步并发操作（Synchronizing concurrent operation）](04_synchronizing_concurrent_operation.md)：[\<condition_variable\>](https://en.cppreference.com/w/cpp/header/condition_variable)、[\<semaphore\>](https://en.cppreference.com/w/cpp/header/semaphore)、[\<barrier\>](https://en.cppreference.com/w/cpp/header/barrier)、[\<latch\>](https://en.cppreference.com/w/cpp/header/latch)、[\<future\>](https://en.cppreference.com/w/cpp/header/future)、[\<chrono\>](https://en.cppreference.com/w/cpp/header/chrono)、[\<ratio\>](https://en.cppreference.com/w/cpp/header/ratio)
+5. [C++ 内存模型和基于原子类型的操作（The C++ memory model and operations on atomic type）](05_the_cpp_memory_model_and_operations_on_atomic_type.md)：[\<atomic\>](https://en.cppreference.com/w/cpp/header/atomic)
 
 ## 并发编程实践
 
-6. [基于锁的并发数据结构的设计（Designing lock-based concurrent data structure）](05_designing_lock_based_concurrent_data_structure.md)
-7. [无锁并发数据结构的设计（Designing lock-free concurrent data structure）](06_designing_lock_free_concurrent_data_structure.md)
-8. [并发代码的设计（Designing concurrent code）](07_designing_concurrent_code.md)
-9. [高级线程管理（Advanced thread management）](08_advanced_thread_management.md)
-10. [并行算法（Parallel algorithm）](09_parallel_algorithm.md)：[\<execution\>](https://en.cppreference.com/w/cpp/header/execution)
-11. [多线程应用的测试与调试（Testing and debugging multithreaded application）](10_testing_and_debugging_multithreaded_application.md)
+6. [基于锁的并发数据结构的设计（Designing lock-based concurrent data structure）](06_designing_lock_based_concurrent_data_structure.md)
+7. [无锁并发数据结构的设计（Designing lock-free concurrent data structure）](07_designing_lock_free_concurrent_data_structure.md)
+8. [并发代码的设计（Designing concurrent code）](08_designing_concurrent_code.md)
+9. [高级线程管理（Advanced thread management）](09_advanced_thread_management.md)
+10. [并行算法（Parallel algorithm）](10_parallel_algorithm.md)：[\<execution\>](https://en.cppreference.com/w/cpp/header/execution)
+11. [多线程应用的测试与调试（Testing and debugging multithreaded application）](11_testing_and_debugging_multithreaded_application.md)
 
 ## 附录
 - [A. C++ 11 语言特性参考](Appx_A_brief_reference_for_some_cpp11_language_features.md)
