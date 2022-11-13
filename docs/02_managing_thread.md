@@ -14,7 +14,7 @@ int main() {
 }
 ```
 
-* [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 的参数也可以是函数对象或者 lambda
+* [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 的构造函数 接受任何可调用类型，可以是 lambda 表达式，甚至可以是一个类实例（只要它重载了调用操作符： operator() ）
 
 ```cpp
 #include <iostream>
@@ -24,22 +24,31 @@ struct A {
   void operator()() const { std::cout << 1; }
 };
 
+void foo()
+{
+  std::cout << "foo" << std::endl;
+}
+
 int main() {
   A a;
-  std::thread t1(a);  // 会调用 A 的拷贝构造函数
-  std::thread t2(A());  // most vexing parse，声明名为 t2 参数类型为 A 的函数
-  std::thread t3{A()};
-  std::thread t4((A()));
-  std::thread t5{[] { std::cout << 1; }};
+  std::thread t1(a);  // √ 会调用 A 的拷贝构造函数
+  std::thread t2(A());  // × most vexing parse，这里不会创建线程，而是声明名为 t2 的函数，其参数类型是一个函数指针，该函数指针指向 A(void) 类型的函数（即无形参，返回值类型为 A）。
+  std::thread t3{A()}; // √ 推荐使用这种统一的线程初始化语法，可以避免上面的问题。
+  std::thread t4((A())); // √ 额外的括号，也可以避免被解析成函数声明
+  std::thread t5{[] { std::cout << 1; }}; // √ 使用 lambda 表达式来创建线程
+  std::thread t6{foo}; // √ 
+  std::thread t7{foo()}; // × foo() 属于函数调用，返回 void 类型，无法用于初始化线程
   t1.join();
   t3.join();
   t4.join();
   t5.join();
+  t6.join();
+  t7.join();
 }
 ```
 
-* 在线程销毁前要对其调用 [join](https://en.cppreference.com/w/cpp/thread/thread/join) 等待线程退出或 [detach](https://en.cppreference.com/w/cpp/thread/thread/detach) 将线程分离，否则 [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 的析构函数会调用 [std::terminate](https://en.cppreference.com/w/cpp/error/terminate) 终止程序，注意分离线程可能出现空悬引用的隐患
-
+* 在线程对象销毁前要对其调用 [join](https://en.cppreference.com/w/cpp/thread/thread/join) 等待线程退出或 [detach](https://en.cppreference.com/w/cpp/thread/thread/detach) 将线程分离，否则 [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 的析构函数会调用 [std::terminate](https://en.cppreference.com/w/cpp/error/terminate) 终止程序，注意分离线程可能出现空悬引用的隐患：例如线程函数持有一个指向局部变量的指针或引用，并且函数退出后线程还没有结束，而局部变量已经被析构了，那么线程中就会访问一个已经被销毁的对象，这是未定义行为。
+* 注意以上说的是线程对象销毁前，而非主线程退出前。实际上如果主线程(main)结束了(或者任何线程调用了 exit 函数)，整个进程就终止了，包括进程中的所有线程都会退出，而不论是否执行了 join/detach. (存疑)
 ```cpp
 #include <iostream>
 #include <thread>
@@ -74,7 +83,8 @@ int main() {
 }
 ```
 
-* [join](https://en.cppreference.com/w/cpp/thread/thread/join) 会在线程结束后清理 [std::thread](https://en.cppreference.com/w/cpp/thread/thread)，使其与完成的线程不再关联，因此对一个线程只能进行一次 [join](https://en.cppreference.com/w/cpp/thread/thread/join)
+* std::thread的成员函数join ()可以用来阻塞线程，它的作用是用来阻塞主线程直到子线程结束，然后再放行主线程
+* [join](https://en.cppreference.com/w/cpp/thread/thread/join) 会在线程结束后清理 [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 对象，使其与完成的线程不再关联，因此对一个线程只能进行一次 [join](https://en.cppreference.com/w/cpp/thread/thread/join)
 
 ```cpp
 #include <thread>
@@ -82,11 +92,15 @@ int main() {
 int main() {
   std::thread t([] {});
   t.join();
+  if(t.joinable()) // 判断为 false, 相关线程资源已被清理， t 既不能再被 join, 也不能被 detach
+  {
+  }
   t.join();  // 错误
 }
 ```
 
 * 如果线程运行过程中发生异常，之后的 [join](https://en.cppreference.com/w/cpp/thread/thread/join) 会被忽略，为此需要捕获异常，并在抛出异常前 [join](https://en.cppreference.com/w/cpp/thread/thread/join)
+* 要确保 join 能覆盖所有可能的退出路径。
 
 ```cpp
 #include <thread>
@@ -103,7 +117,7 @@ int main() {
 }
 ```
 
-* C++20 提供了 [std::jthread](https://en.cppreference.com/w/cpp/thread/jthread)，它会在析构函数中对线程 [join](https://en.cppreference.com/w/cpp/thread/thread/join)
+* RAII: C++20 提供了 [std::jthread](https://en.cppreference.com/w/cpp/thread/jthread)，它会在析构函数中对线程 [join](https://en.cppreference.com/w/cpp/thread/thread/join)
 
 ```cpp
 #include <thread>
@@ -154,7 +168,32 @@ int main() {
 }
 ```
 
-* 参数的引用类型也会被忽略，为此要使用 [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref)
+* 在如下例子中，字符串字面值会被拷贝，然后在新线程的上下文转换为一个 std::string 对象。
+
+```cpp
+void f(int i, std::string const& s);
+std::thread t(f,3,"hello");
+```
+
+* 如下例子中，函数可能在 buffer 成功转换成 std::string 对象之前就退出，导师未定义的定位。解决办法：手动进行类型转换，使得传入线程函数之前就完成转换。
+
+```cpp
+void f(int i, std::string const& s);
+void oops(int some_param)
+{
+  char buffer[1024];
+  sprintf(buffer, "%i", some_param);
+  std::thread t(f, 3, buffer);
+  t.detach();
+}
+```
+
+```cpp
+std::thread t(f, 3, std::string(buffer));
+```
+
+
+* thread的构造函数永远都会拷贝参数，然后以右值的形式传递给调用对象或函数。如果线程函数期望一个左值引用的参数，就会编译失败。解决办法：使用 [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref) 将参数包装为引用的形式。
 
 ```cpp
 #include <cassert>
@@ -183,7 +222,7 @@ class A {
 
 int main() {
   A a;
-  std::thread t1{&A::f, &a, 42};  // 调用 a->f(42)
+  std::thread t1{&A::f, &a, 42};  // 调用 a.f(42)
   std::thread t2{&A::f, a, 42};   // 拷贝构造 tmp_a，再调用 tmp_a.f(42)
   t1.join();
   t2.join();
@@ -225,8 +264,8 @@ int main() {
   a = std::thread{g};
   assert(a.joinable());
   assert(b.joinable());
-  // a = std::move(b);  // 错误，不能转移所有权到 joinable 的线程
-  a.join();
+  // a = std::move(b);  // 错误，不能转移所有权到 joinable 的线程,系统将调用 std::terminate() 终止程序运行
+  a.join(); // join 完了之后，下一步 a 不再是 joinable
   a = std::move(b);
   assert(a.joinable());
   assert(!b.joinable());
@@ -260,7 +299,7 @@ std::thread f() {
 }
 
 int main() {
-  std::thread t{f()};
+  std::thread t{f()}; // f() 返回临时值，用于移动构造 std::thread 实例
   t.join();
 }
 ```
@@ -280,7 +319,7 @@ int main() {
 }
 ```
 
-* 实现一个可以直接用 [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 构造的自动清理线程的类
+* 实现一个可以直接用 [std::thread](https://en.cppreference.com/w/cpp/thread/thread) 构造的自动清理线程的类: 将线程资源移动到 scoped_thread, 并在析构时自动 join
 
 ```cpp
 #include <stdexcept>
@@ -307,7 +346,7 @@ int main() {
 }
 ```
 
-* 类似 [std::jthread](https://en.cppreference.com/w/cpp/thread/jthread) 的类
+* 类似 [std::jthread](https://en.cppreference.com/w/cpp/thread/jthread) 的类：在析构中自动 join
 
 ```cpp
 #include <thread>
