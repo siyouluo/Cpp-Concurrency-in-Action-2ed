@@ -2,6 +2,8 @@
 
 * 在并发编程中，一种常见的需求是，一个线程等待另一个线程完成某个事件后，再继续执行任务。对于这种情况，标准库提供了 [std::condition_variable](https://en.cppreference.com/w/cpp/thread/condition_variable)
 
+<img src="images/condition_variable_wait.png" height=400 alt="条件变量调用 wait 流程图">
+
 ```cpp
 #include <condition_variable>
 #include <iostream>
@@ -16,7 +18,7 @@ class A {
       step1_done_ = true;
     }
     std::cout << 1;
-    cv_.notify_one();
+    cv_.notify_one(); // 在互斥锁的作用域之外唤醒其他线程：当线程被唤醒，无需等待互斥锁
   }
 
   void step2() {
@@ -137,6 +139,9 @@ int main() {
   t2.join();
 }  // 12
 ```
+
+* 伪唤醒：没有接收到通知，等待线程就醒来
+* 唤醒丢失：被等待的线程发送了 notify, 但等待线程还没开始 wait, 这时除非前者再 notify 一次，否则后者会一直等待下去。
 
 * 与 [std::stack](https://en.cppreference.com/w/cpp/container/stack) 一样，[std::queue](https://en.cppreference.com/w/cpp/container/queue) 的 front 和 pop 存在 race condition，为此将 front 和 pop 合并成 try_pop 函数，此外利用 [std::condition_variable](https://en.cppreference.com/w/cpp/thread/condition_variable) 实现 wait_and_pop 的接口，当没有元素可弹出时会阻塞，直至有元素可弹出
 
